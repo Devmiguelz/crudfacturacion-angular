@@ -10,6 +10,11 @@ export class FacturaService {
 
   constructor(private http: HttpClient) { }
 
+  BuscarFactura(cod: number) {
+    const url = environment.URL_API + '/api/Factura/Buscar/' + cod;
+    return this.http.get(url);
+  }
+
   ListarFacturas() {
     const url = environment.URL_API + '/api/Factura/Listar';
     return this.http.get(url);

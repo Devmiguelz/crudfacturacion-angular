@@ -30,12 +30,3 @@ export class ActualizarDetalleRequest {
     public codfactura: number;
     public codproducto: number;
 }
-
-export class ListaProductoDetalle {
-    public coddetalle?: number;
-    public codproducto: number;
-    public producto: string;
-    public subtotal: number;
-    public precio: number;
-    public cantidad: number;
-}

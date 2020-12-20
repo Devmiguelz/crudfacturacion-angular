@@ -5,12 +5,19 @@ import { FacturaDetalleComponent } from './facturacion/factura-detalle/factura-d
 
 
 const routes: Routes = [
-  { path: '', component: FacturaComponent  },
   {
+    path: '',
+    component: FacturaComponent
+  },
+  /* {
+    path: 'detalle',
+    component: FacturaDetalleComponent
+  }, */
+ /*  {
     path: 'factura' ,
     loadChildren: () => import('./facturacion/facturacion.module').then(m => m.FacturacionModule)
-  },
-  { path: '**', redirectTo: '' }
+  }, */
+  { path: '**', redirectTo: 'FacturaComponent' }
 ];
 
 @NgModule({

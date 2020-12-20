@@ -1,10 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component,Inject, OnInit } from '@angular/core';
 import { ClienteService } from '../services/cliente/cliente.service';
 import { ProductoService } from '../services/producto/producto.service';
 import { ClienteModel } from '../models/ClienteModel';
 import { ProductoModel } from '../models/ProductoModel';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ListaProductoDetalle, CrearFacturaRequest, CrearDetalleRequest, ActualizarFacturaRequest } from '../request/ModelRequest';
+import { CrearFacturaRequest, ActualizarFacturaRequest } from '../request/ModelRequest';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FacturaService } from '../services/factura/factura.service';
+import { MAT_DIALOG_DATA} from '@angular/material/dialog';
+import { FacturaModel } from '../models/FacturaModel';
+import { DetalleFacturaModel } from '../models/DetalleFacturaModel';
+import { SwalertServiceService } from '../../utils/swalert-service.service';
 
 @Component({
   selector: "app-factura-detalle",
@@ -18,22 +24,26 @@ export class FacturaDetalleComponent implements OnInit {
   dataProductoSeleccionado: ProductoModel;
   formFactura: FormGroup;
   formDetalleFactura: FormGroup;
+  factura=null;
+  ListaDetalleProductos: DetalleFacturaModel[] = [];
 
-  ListaDetalleProductos: ListaProductoDetalle[] = [];
-
-  constructor(
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any,
     private formBuilder: FormBuilder,
     private _clienteService: ClienteService,
-    private _productoService: ProductoService
+    private _productoService: ProductoService,
+    private _facturaService:FacturaService,
+    private _swalAlertService:SwalertServiceService
   ) {
     this.FormFactura();
+    this.factura=data;
+    this.cargarFacturaEditar(this.factura)
     this.FormDetalleFactura();
     this.CargarClientes();
     this.CargarProductos();
   }
 
   ngOnInit(): void {
-    
+   
   }
 
   FormFactura() :void{
@@ -55,24 +65,37 @@ export class FacturaDetalleComponent implements OnInit {
       subtotal: [0, [Validators.required]]
     });
   }
+  cargarFacturaEditar(factura:FacturaModel){
+    if (factura!=null) {
+    this.ListaDetalleProductos=factura.detalle;
+    this.formFactura.setValue({
+      cod: factura.cod,
+      fecha: factura.fecha,
+      codcliente: factura.codcliente,
+      subtotal: factura.subtotal,
+      iva: factura.iva,
+      total: factura.total
+    })
+    }
+  }
 
   CargarProductos(): void {
     this._productoService
       .ListarProductos()
-      .subscribe((result: any) => {
-        if (result.status) {
-          this.dataProductos = result.data;
-        }
+      .subscribe((result: ProductoModel[]) => {
+          this.dataProductos = result;
+      },(error:HttpErrorResponse)=>{
+        this._swalAlertService.toastError(error.error,1500);
       });
   }
 
   CargarClientes(): void {
     this._clienteService
       .ListarClientes()
-      .subscribe((result: any) => {
-        if (result.status) {
-          this.dataClientes = result.data;
-        }
+      .subscribe((result: ClienteModel[]) => {
+        this.dataClientes = result;
+      },(error:HttpErrorResponse)=>{
+        this._swalAlertService.toastError(error.error,1500);
       });
   }
 
@@ -80,13 +103,11 @@ export class FacturaDetalleComponent implements OnInit {
     if(codproducto != 0){
       this._productoService
         .BuscarProducto(codproducto)
-        .subscribe((result: any) => {
-          if (result.status) {
-            this.dataProductoSeleccionado = result.data;
+        .subscribe((result: ProductoModel) => {
+            this.dataProductoSeleccionado = result;
             this.formDetalleFactura.controls["precio"].setValue(this.dataProductoSeleccionado.precio);
             this.CalcularSubtotalDetalle(this.dataProductoSeleccionado.precio, this.formDetalleFactura.value.cantidad);
-          }
-        });
+        },(error:HttpErrorResponse)=>{console.log(error)});
     }else{
       this.dataProductoSeleccionado = null;
       this.formDetalleFactura.controls["subtotal"].setValue(0);
@@ -150,6 +171,8 @@ export class FacturaDetalleComponent implements OnInit {
           let subtotal = detalleAgregado.precio * totalCantidad;        
           this.ListaDetalleProductos[posicion].cantidad = totalCantidad;
           this.ListaDetalleProductos[posicion].subtotal = subtotal;
+        }else{
+          this._swalAlertService.toastError("Supera la cantidad del Stock",1500);
         } 
       }else{
         this.LlenarListaDetalle();
@@ -164,7 +187,7 @@ export class FacturaDetalleComponent implements OnInit {
     if(this.dataProductoSeleccionado.cantidad >= this.formDetalleFactura.value.cantidad){
       this.ListaDetalleProductos.push(
         {
-          coddetalle: null,
+          cod: null,
           codproducto: this.formDetalleFactura.value.codproducto,
           producto: this.dataProductoSeleccionado.descripcion,
           subtotal: this.formDetalleFactura.value.subtotal,
@@ -186,20 +209,25 @@ export class FacturaDetalleComponent implements OnInit {
       iva: this.formFactura.value.iva,
       total: this.formFactura.value.total,
       codcliente: this.formFactura.value.codcliente,
-      detalle: this.ListaDetalleProductos.map((d: ListaProductoDetalle) => 
+      detalle: this.ListaDetalleProductos.map((detalle: DetalleFacturaModel) => 
         { 
           return { 
-                  codproducto: d.codproducto, 
-                  subtotal: d.subtotal, 
-                  cantidad: d.cantidad
+                  codproducto: detalle.codproducto, 
+                  subtotal: detalle.subtotal, 
+                  cantidad: detalle.cantidad
                 } 
         })
     }
-    this.FormFactura();
-    this.FormDetalleFactura();
-    this.ListaDetalleProductos = [];
-    this.dataProductoSeleccionado = null;
-    console.log(dataFactura);
+    this._facturaService.CrearFactura(dataFactura).subscribe((result)=>{
+      this.FormFactura();
+      this.FormDetalleFactura();
+      this.ListaDetalleProductos = [];
+      this.dataProductoSeleccionado = null;
+      this._swalAlertService.toastSuccess('Agregado correctamente',1500)
+
+    },(error:HttpErrorResponse)=>{
+      this._swalAlertService.toastError(error.error,1500);
+    });
   }
 
   ActualizarFactura(): void{
@@ -210,22 +238,30 @@ export class FacturaDetalleComponent implements OnInit {
       iva: this.formFactura.value.iva,
       total: this.formFactura.value.total,
       codcliente: this.formFactura.value.codcliente,
-      detalle: this.ListaDetalleProductos.map((d: ListaProductoDetalle) => 
+      detalle: this.ListaDetalleProductos.map((detalle: DetalleFacturaModel) => 
         { 
           return { 
-                  cod: d.coddetalle,
-                  codproducto: d.codproducto, 
+                  cod: detalle.cod,
+                  codproducto: detalle.codproducto, 
                   codfactura: this.formFactura.value.cod,
-                  subtotal: d.subtotal, 
-                  cantidad: d.cantidad
+                  subtotal: detalle.subtotal, 
+                  cantidad: detalle.cantidad
                 } 
         })
     }
-    this.FormFactura();
-    this.FormDetalleFactura();
-    this.ListaDetalleProductos = [];
-    this.dataProductoSeleccionado = null;
-    console.log(dataFactura);
+    this._facturaService.ActualizarFactura(dataFactura).subscribe((result)=>{
+      this.FormFactura();
+      this.FormDetalleFactura();
+      this.ListaDetalleProductos = [];
+      this.dataProductoSeleccionado = null;
+      this._swalAlertService.toastSuccess('Actualizado correctamente',1500)
+
+      console.log(dataFactura);
+    },(error:HttpErrorResponse)=>{
+      this._swalAlertService.toastError(error.error,1500)
+
+    })
+   
   }
 
   ValidarControl(control: string, formulario: FormGroup){

@@ -1,128 +1,143 @@
-<form [formGroup]="formFactura">
-    <h4>Agregar Factura</h4>
-    <div class="card">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <label>Fecha</label>
-                    <input type="date" formControlName="fecha" class="form-control">
-                </div>
-                <div class="col-md-6">
-                    <label>Cliente</label>
-                    <select formControlName="codcliente" class="form-control" [class.is-invalid]="ValidarControl('codcliente', formFactura)" >
-                        <option value="0">Seleccione</option>
-                        <option *ngFor="let cliente of dataClientes" [value]="cliente.cod">{{cliente.nombrecompleto}}
-                        </option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="card mt-2">
-        <div class="card-body body-padding">
-            <form [formGroup]="formDetalleFactura">
+<h2 mat-dialog-title>{{factura!=null?'Actualizar ':'Agregar '}}Factura</h2>
+<mat-dialog-content class="mat-typography">
+    <form [formGroup]="formFactura">
+        
+        <div class="card">
+            <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
-                        <label>Producto</label>
-                        <select formControlName="codproducto" class="form-control" [class.is-invalid]="ValidarControl('codproducto', formDetalleFactura)" (change)="ProductoChange($event.target.value)" >
+                    <div class="col-md-6">
+                        <label>Fecha</label>
+                        <input type="date" formControlName="fecha" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label>Cliente</label>
+                        <select formControlName="codcliente" class="form-control" [class.is-invalid]="ValidarControl('codcliente', formFactura)" >
                             <option value="0">Seleccione</option>
-                            <option *ngFor="let producto of dataProductos" [value]="producto.cod">{{producto.descripcion}}
+                            <option *ngFor="let cliente of dataClientes" [value]="cliente.cod">{{cliente.nombrecompleto}}
                             </option>
                         </select>
-                        <span *ngIf="dataProductoSeleccionado != null" class="text-success p-absolute"><small>Cantidad en stock: {{ dataProductoSeleccionado.cantidad }}</small></span>
-                    </div>
-                    <div class="col-md-2">
-                        <label>Cant.</label>
-                        <input formControlName="cantidad" type="number" (change)="CantidadChange($event.target.value)" value="1" min="1"
-                            [max]="dataProductoSeleccionado!= null ? dataProductoSeleccionado.cantidad : 100" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>Precio</label>
-                        <input formControlName="precio" type="text" class="form-control" readonly>
-                    </div>
-                    <div class="col-md-3">
-                        <label>Subtotal</label>
-                        <input formControlName="subtotal" type="text" class="form-control" readonly>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <button class="btn btn-warning float-right" [disabled]="formDetalleFactura.invalid" (click)="AgregarProductoDetalle()">
-                            Agregar
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="card mt-2">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <table class="table">
-                        <thead>
-                          <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Pracio unit.</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Acción</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let producto of ListaDetalleProductos; index as i">
-                                <th>{{i + 1}}</th>
-                                <td>{{producto.producto}}</td>
-                                <td>{{producto.cantidad}}</td>
-                                <td>{{producto.precio | currency:'CAD':'symbol-narrow':'.0-0'}}</td>
-                                <td>{{producto.subtotal | currency:'CAD':'symbol-narrow':'.0-0'}}</td>
-                                <td>
-                                    <button class="btn btn-danger" (click)="EliminarProductoDetalle(i)">
-                                        ELIMINAR
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="list-group list-group-flush">
-            <div class="list-group-item">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Subtotal</label>
-                        <input formControlName="subtotal" type="number" class="form-control" readonly>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>% IVA</label>
-                        <input type="number" placeholder="16%" value="0" (change)="IvaChange($event.target.value)" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>IVA</label>
-                        <input formControlName="iva" type="number" class="form-control" readonly>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Total</label>
-                        <input formControlName="total" type="number" class="form-control" readonly>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button class="btn btn-success float-right" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="AgregarFactura()">
-                            Generar Factura
-                        </button>
-                        <button class="btn btn-primary float-right" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="ActualizarFactura()">
-                            Actualizar Factura
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</form>
+        <div class="card mt-2">
+            <div class="card-body body-padding">
+                <form [formGroup]="formDetalleFactura">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>Producto</label>
+                            <select formControlName="codproducto" class="form-control" [class.is-invalid]="ValidarControl('codproducto', formDetalleFactura)" (change)="ProductoChange($event.target.value)" >
+                                <option value="0">Seleccione</option>
+                                <option *ngFor="let producto of dataProductos" [value]="producto.cod">{{producto.descripcion}}
+                                </option>
+                            </select>
+                            <span *ngIf="dataProductoSeleccionado != null" class="text-success p-absolute"><small>Cantidad en stock: {{ dataProductoSeleccionado.cantidad }}</small></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Cant.</label>
+                            <input formControlName="cantidad" type="number" (change)="CantidadChange($event.target.value)" value="1" min="1"
+                                [max]="dataProductoSeleccionado!= null ? dataProductoSeleccionado.cantidad : 100" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Precio</label>
+                            <input formControlName="precio" type="text" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Subtotal</label>
+                            <input formControlName="subtotal" type="text" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button class="btn btn-warning float-right" [disabled]="formDetalleFactura.invalid" (click)="AgregarProductoDetalle()">
+                                Agregar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-2">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table">
+                            <thead>
+                              <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Pracio unit.</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Acción</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let producto of ListaDetalleProductos; index as i">
+                                    <th>{{i + 1}}</th>
+                                    <td>{{producto.producto}}</td>
+                                    <td>{{producto.cantidad}}</td>
+                                    <td>{{producto.precio | currency:'CAD':'symbol-narrow':'.0-0'}}</td>
+                                    <td>{{producto.subtotal | currency:'CAD':'symbol-narrow':'.0-0'}}</td>
+                                    <td>
+                                        <button class="btn btn-danger" (click)="EliminarProductoDetalle(i)">
+                                            ELIMINAR
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Subtotal</label>
+                            <input formControlName="subtotal" type="number" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>% IVA</label>
+                            <input type="number" placeholder="16%" value="0" (change)="IvaChange($event.target.value)" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label>IVA</label>
+                            <input formControlName="iva" type="number" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Total</label>
+                            <input formControlName="total" type="number" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <!-- <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-success float-right" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="AgregarFactura()">
+                                Generar Factura
+                            </button>
+                            <button class="btn btn-primary float-right" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="ActualizarFactura()">
+                                Actualizar Factura
+                            </button>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button *ngIf="factura===null" class="btn btn-success float-right" [mat-dialog-close]="true" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="AgregarFactura()">
+    Generar Factura
+</button>
+<button  *ngIf="factura!==null" class="btn btn-primary float-right" [mat-dialog-close]="true" [disabled]="ListaDetalleProductos.length == 0 || formFactura.invalid" (click)="ActualizarFactura()">
+    Actualizar Factura
+</button>
+</mat-dialog-actions>
+
+
+
